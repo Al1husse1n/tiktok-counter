@@ -1,3 +1,21 @@
-pip install fastapi uvicorn
-pip install python-multipart
-pip install python-telegram-bot
+# Web Framework & Server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# File upload support for FastAPI
+python-multipart>=0.0.6
+
+# Telegram Bot
+python-telegram-bot>=20.0
+
+# HTTP clients
+requests>=2.31.0
+httpx>=0.25.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Optional but useful
+# pydantic>=2.0.0  # Already included with fastapi
+# aiofiles>=23.0.0  # For async file handling
+# tenacity>=8.2.0   # For retry logic
