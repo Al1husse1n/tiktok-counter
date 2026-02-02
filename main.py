@@ -37,7 +37,7 @@ async def count_messages(username:str, file:UploadFile = File(...)):
         return {
             "You": chat_user,
             username: other_user,
-            "your_average": average_sent
+            "your_average": round(average_sent)
         }
     except Exception as e:
         raise HTTPException(400, str(e))
