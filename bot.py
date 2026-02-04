@@ -3,6 +3,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from typing import Final
 import requests, httpx, os, io
 from dotenv import load_dotenv
+from gem import ai_reply
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -54,19 +55,21 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "✅ File received.\n\n"
-        "Now send the username you want me to analyze."
+        "Now send the username you want me to analyze (eg: @bob)."
     )
 
 
 
 async def handle_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if "file_like" not in context.user_data:
+        await handle_messages(update,context)
+        return
+    if not update.message.text.startswith("@"):
         await update.message.reply_text(
-            "⚠️ Please send a JSON file first."
+            "Please send me a username that starts with @"
         )
         return
-
-    username = update.message.text.strip()
+    username = update.message.text[1:].strip()
     file_like = context.user_data.pop("file_like")
 
     async with httpx.AsyncClient() as client:
@@ -88,6 +91,15 @@ async def handle_username(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"You: {data.get('You', 0)} ({average}%)\n"
         f"{username}: {data.get(username, 0)} ({100 - average}%)"
     )
+    context.user_data["username"] = username
+
+async def handle_messages(update:Update, context:ContextTypes.DEFAULT_TYPE):
+    try:
+        user = update.effective_user.first_name
+        await update.message.reply_text(ai_reply(update.message.text, user))
+    except Exception as e:
+        await update.message.reply_text("Something went wrong, try again later")
+        print(str(e))
 
 async def error(update:Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update: {update} caused error: {context.error}")
@@ -101,6 +113,7 @@ if __name__ == "__main__":
     #messages
     app.add_handler(MessageHandler(filters.TEXT, handle_username))
     app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
+    app.add_handler(MessageHandler(filters.TEXT, handle_messages))
 
     app.add_error_handler(error)
     print('Polling')

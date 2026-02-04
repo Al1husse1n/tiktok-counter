@@ -14,7 +14,7 @@ async def count_messages(username:str, file:UploadFile = File(...)):
         data = json.loads(contents)
         chat_history = (
             data
-            .get("Direct Message", {})  #.get(key, default), so it doesnt crash
+            .get("Direct Message", {})  
             .get("Direct Messages", {})
             .get("ChatHistory", {})
         )
