@@ -37,14 +37,15 @@ class UserResponse(BaseModel):
 
 app.post('/save_user/{username}', response_model=UserResponse)
 async def save_user(username:str, db:Session=Depends(get_db)):
-    if db.query(User).filter(User.username == username):
-        return{"result":f"{username} is already registered"}
+    existing=db.query(User).filter(User.username == username).first()
+    if existing:
+        return existing
     else:
-        user = User(username=username)
-        db.add(user)
+        new_user = User(username=username)
+        db.add(new_user)
         db.commit()
-        db.refresh()
-        return user
+        db.refresh(new_user)
+        return new_user
 
 @app.post("/analyze/{username}")
 async def count_messages(username:str, file:UploadFile = File(...)):
