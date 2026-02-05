@@ -1,9 +1,45 @@
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker, Session
+
 import json
 
 app = FastAPI()
+
+engine = create_engine('sqlite:///users.db', connect_args= {'check_some_thread':False})
+SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    id= Column(Integer, primary_key=True, index=True)
+    username=Column(String, nullable=False)
+Base.metadata.create_all(engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+class UserResponse(BaseModel):
+    id:int
+    username:str
+
+app.post('/save_user/{username}', response_model=UserResponse)
+async def save_user(username:str, db:Session=Depends(get_db)):
+    if db.query(User).filter(User.username == username):
+        return{"result":f"{username} is already registered"}
+    else:
+        user = User(username=username)
+        db.add(user)
+        db.commit()
+        db.refresh()
+        return user
 
 @app.post("/analyze/{username}")
 async def count_messages(username:str, file:UploadFile = File(...)):
