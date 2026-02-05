@@ -2,9 +2,10 @@ from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import sessionmaker, Session
-
+from sqlalchemy.sql import func
+from datetime import datetime
 import json
 
 app = FastAPI()
@@ -17,6 +18,7 @@ class User(Base):
     __tablename__ = 'users'
     id= Column(Integer, primary_key=True, index=True)
     username=Column(String, nullable=False)
+    date_joined=Column(DateTime(timezone=True), server_default=func.now())
 Base.metadata.create_all(engine)
 
 def get_db():
@@ -29,6 +31,9 @@ def get_db():
 class UserResponse(BaseModel):
     id:int
     username:str
+    date_joined:datetime
+    class Config:
+        from_attributes = True 
 
 app.post('/save_user/{username}', response_model=UserResponse)
 async def save_user(username:str, db:Session=Depends(get_db)):
