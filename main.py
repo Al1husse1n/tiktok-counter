@@ -10,7 +10,7 @@ import json
 
 app = FastAPI()
 
-engine = create_engine('sqlite:///users.db', connect_args= {'check_some_thread':False})
+engine = create_engine('sqlite:///users.db', connect_args= {'check_same_thread':False})
 SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=engine)
 Base = declarative_base()
 
@@ -35,7 +35,7 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True 
 
-app.post('/save_user/{username}', response_model=UserResponse)
+@app.post('/save_user/{username}', response_model=UserResponse)
 async def save_user(username:str, db:Session=Depends(get_db)):
     existing=db.query(User).filter(User.username == username).first()
     if existing:
@@ -45,6 +45,7 @@ async def save_user(username:str, db:Session=Depends(get_db)):
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+        print(f"{new_user.username} succesfully registered")
         return new_user
 
 @app.post("/analyze/{username}")
