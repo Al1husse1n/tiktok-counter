@@ -4,15 +4,33 @@ from typing import Final
 import requests, httpx, os, io
 from dotenv import load_dotenv
 from gem import ai_reply
+from datetime import datetime
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 FASTAPI_URL = os.getenv("FASTAPI_URL")
+SAVE_USER_URL = os.getenv("SAVE_USER_URL")
 
 
 
 #commands
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if "registered" not in context.user_data:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                f"{SAVE_USER_URL}/{user.username}"
+                )
+                response.raise_for_status()
+                context.user_data["registered"] = True
+                context.user_data['join_date'] = datetime.now().isoformat()
+            except Exception as e:
+                print(f"Failed to save {user.username}: {e}")
+                await update.message.reply_text(
+                    "Something wrong happened, please restart the bot"
+                )
+        
     await update.message.reply_text(
         "👋 Welcome!\n\n"
         "This bot helps you count TikTok videos exchanged between two people in a conversation.\n\n"
