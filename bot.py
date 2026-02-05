@@ -25,11 +25,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 response.raise_for_status()
                 context.user_data["registered"] = True
                 context.user_data['join_date'] = datetime.now().isoformat()
+                print(f"{user.username} registered successfully")
             except Exception as e:
-                print(f"Failed to save {user.username}: {e}")
                 await update.message.reply_text(
                     "Something wrong happened, please restart the bot"
                 )
+                return
         
     await update.message.reply_text(
         "👋 Welcome!\n\n"
